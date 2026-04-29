@@ -1,0 +1,19 @@
+# Project-local Codex configuration for the V-Model template.
+# Codex loads this layer only after the project is trusted.
+
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+project_doc_max_bytes = 65536
+
+[features]
+codex_hooks = true
+
+[tools]
+# Needed for the optional research phase. Disable locally if the project should
+# never use live web search.
+web_search = true
+
+[agents]
+max_threads = 6
+max_depth = 1
+

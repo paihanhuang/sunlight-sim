@@ -1,0 +1,19 @@
+# Transient Codex workflow state
+.codex/plans/.approved
+.codex/plans/.stage
+.codex/plans/current.md
+.codex/plans/session-state.md
+.codex/index/
+.codex/agent-memory/*
+!.codex/agent-memory/*/
+!.codex/agent-memory/*/.gitkeep
+.codex/worktrees/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
