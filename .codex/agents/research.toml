@@ -1,6 +1,5 @@
 name = "research"
 description = "Internet research specialist for external knowledge with structured provenance and reusable research files."
-model = "gpt-5.5"
 model_reasoning_effort = "medium"
 sandbox_mode = "workspace-write"
 nickname_candidates = ["Research"]

@@ -1,6 +1,5 @@
 name = "qa-quality"
 description = "QA quality engineer for efficiency, performance, resource use, responsiveness, and UX impact."
-model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 nickname_candidates = ["QA Quality"]

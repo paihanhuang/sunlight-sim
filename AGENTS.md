@@ -77,15 +77,26 @@ overwrite `.codex/plans/current.md` without archiving first.
 
 ## Approval Gate
 
-Project-local Codex hooks in `.codex/hooks.json` block `apply_patch` and clear
-Bash write commands against project files unless `.codex/plans/.approved`
-exists. Gate artifacts (`.approved`, `.stage`) are protected. Working
-directories under `.codex/` such as plans, index, research, and agent-memory are
-allowed. Markdown files outside source directories are allowed for non-coding
-tasks.
+Codex hooks are not the default enforcement mechanism for this template. Prefer
+stable Codex features, user-level sandbox and approval settings, command rules,
+and these project instructions. Project-local `.codex/config.toml` should not
+force `sandbox_mode` or `approval_policy` unless a project intentionally needs a
+stricter posture than the user's global default.
 
-Hooks are guardrails, not a security boundary. Continue to ask the user before
-destructive actions or broad rewrites.
+For V-Model implementation work, approval is an orchestrator contract: propose
+or archive a plan, wait for explicit user approval, then create
+`.codex/plans/.approved` and update `.codex/plans/.stage` as needed. Gate
+artifacts are protected workflow markers and must only be created after explicit
+approval.
+
+Command policy belongs in `.codex/rules/*.rules` and user-level
+`~/.codex/rules/*.rules`. Hooks under `.codex/hooks/` are legacy or optional
+strict-mode material for lifecycle checks that native config cannot express.
+Continue to ask the user before destructive actions or broad rewrites.
+
+When the active session uses yolo/full-access permissions, subagents inherit
+that live runtime posture. Treat custom-agent `sandbox_mode` fields as useful
+for non-yolo profiles, not as hard containment during yolo sessions.
 
 ## Session Continuity
 
@@ -95,17 +106,20 @@ Compaction or resume recovery:
 2. Check `.codex/plans/.approved` and `.codex/plans/.stage`.
 3. Resume from the interrupted phase.
 
-Session start hooks inject `.codex/plans/session-state.md` when it exists. Ask
-the user whether to resume or start fresh. When compacting, preserve the full
-list of modified files, current workflow phase, and unresolved decisions.
+At session start, resume, or compaction recovery, read
+`.codex/plans/session-state.md` when it exists and ask the user whether to
+resume or start fresh. When compacting, preserve the full list of modified
+files, current workflow phase, and unresolved decisions.
 
 Before ending after substantial work, ensure `.codex/plans/session-state.md`
 captures what was accomplished, what is pending, and any blockers.
 
 ## Verification
 
-This template includes a placeholder `verify.sh`. Projects should customize it.
-For longer checks, use the OS-agnostic timeout pattern:
+This template includes placeholder `verify.sh` and `verify.ps1` scripts.
+Projects should customize them. Run the smallest meaningful verification first,
+then broader checks when risk warrants it. For longer Bash checks, use the
+OS-agnostic timeout pattern:
 
 ```bash
 TIMEOUT_CMD=$(command -v timeout 2>/dev/null || command -v gtimeout 2>/dev/null || echo "")

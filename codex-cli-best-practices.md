@@ -58,10 +58,11 @@ directory appearing later in the instruction chain.
 Useful project-local files:
 
 - `AGENTS.md`: concise operating guidance loaded at session start.
-- `.codex/config.toml`: project configuration such as hooks, agents, and search.
-- `.codex/hooks.json`: deterministic lifecycle hooks.
+- `.codex/config.toml`: project configuration such as stable feature pins and agents.
 - `.codex/agents/*.toml`: custom subagents.
 - `.codex/rules/*.rules`: approval rules for commands outside the sandbox.
+- `.codex/hooks/*.sh`: optional legacy/strict-mode lifecycle scripts. Hooks are
+  disabled by default in this template.
 - `.agents/skills/<name>/SKILL.md`: repo-scoped skills.
 
 Keep `AGENTS.md` concise. Put long phase details, templates, and reference

@@ -1,6 +1,5 @@
 name = "engineer"
 description = "Lead engineer for implementation and engineering reviews. Focuses on maintainability, efficiency, and code quality."
-model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 nickname_candidates = ["Engineer"]

@@ -1,6 +1,5 @@
 name = "qa-robustness"
 description = "QA robustness engineer for functional correctness, edge cases, failure modes, and regression risks."
-model = "gpt-5.5"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 nickname_candidates = ["QA Robustness"]

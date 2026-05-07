@@ -5,9 +5,9 @@ This file documents how the original Claude Code template maps to Codex CLI.
 | Claude template | Codex template | Notes |
 |-----------------|----------------|-------|
 | `CLAUDE.md` | `AGENTS.md` | Codex reads `AGENTS.md` as project instructions. |
-| `.claude/settings.json` | `.codex/config.toml` + `.codex/hooks.json` | Codex uses TOML config and JSON or TOML hooks. |
+| `.claude/settings.json` | `.codex/config.toml` + user/global Codex settings | Codex uses TOML config. Hooks are optional legacy or strict-mode material, not the template default. |
 | `.claude/agents/*.md` | `.codex/agents/*.toml` | Codex custom agents are standalone TOML files. |
-| `.claude/hooks/*.sh` | `.codex/hooks/*.sh` | Hook payloads differ, so scripts are adapted. |
+| `.claude/hooks/*.sh` | `.codex/hooks/*.sh` | Optional legacy/strict-mode scripts only; default workflow uses features, rules, and `AGENTS.md`. |
 | `.claude/rules/*.md` | `.codex/docs` and `.codex/rules/*.rules` | Codex command approval rules use Starlark `.rules`. |
 | `.claude/skills/*` | `.agents/skills/*` | Repo skills use the open agent skills layout. |
 | `.claude/plans` | `.codex/plans` | Same workflow state convention. |

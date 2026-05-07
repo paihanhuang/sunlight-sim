@@ -1,17 +1,17 @@
+#:schema https://developers.openai.com/codex/config-schema.json
 # Project-local Codex configuration for the V-Model template.
-# Codex loads this layer only after the project is trusted.
+# Keep only template-scoped defaults here. Sandbox, approval, and full-access
+# posture are intentionally controlled by the user-level Codex config so this
+# template does not downgrade a global yolo/full-access default.
 
-sandbox_mode = "workspace-write"
-approval_policy = "on-request"
 project_doc_max_bytes = 65536
 
 [features]
-codex_hooks = true
-
-[tools]
-# Needed for the optional research phase. Disable locally if the project should
-# never use live web search.
-web_search = true
+multi_agent = true
+shell_tool = true
+shell_snapshot = true
+skill_mcp_dependency_install = true
+enable_request_compression = true
 
 [agents]
 max_threads = 6
