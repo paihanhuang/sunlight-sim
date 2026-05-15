@@ -15,9 +15,10 @@ import { CesiumSunViewer } from "./components/CesiumSunViewer";
 import { DEFAULT_LOCATION, formatCoordinate, parseCoordinate } from "./lib/coordinates";
 import { geocodeAddress } from "./lib/googleGeocode";
 import {
-  combineLocalDateAndTime,
-  getSolarDay,
+  getDaylightAppearance,
+  getSolarDayForDate,
   getSunPosition,
+  getZonedSimulationTime,
 } from "./lib/solar";
 import type { MapMode, PropertyLocation, ShadowQuality } from "./types";
 
@@ -64,17 +65,34 @@ export function App() {
   const [formMessage, setFormMessage] = useState("");
   const [isGeocoding, setIsGeocoding] = useState(false);
 
-  const simulationDate = useMemo(
-    () => combineLocalDateAndTime(dateValue, timeValue),
-    [dateValue, timeValue]
+  const simulationTime = useMemo(
+    () =>
+      getZonedSimulationTime(
+        dateValue,
+        timeValue,
+        location.latitude,
+        location.longitude
+      ),
+    [dateValue, location.latitude, location.longitude, timeValue]
   );
+  const simulationDate = simulationTime.date;
   const sunPosition = useMemo(
     () => getSunPosition(simulationDate, location.latitude, location.longitude),
     [location.latitude, location.longitude, simulationDate]
   );
   const solarDay = useMemo(
-    () => getSolarDay(simulationDate, location.latitude, location.longitude),
-    [location.latitude, location.longitude, simulationDate]
+    () =>
+      getSolarDayForDate(
+        dateValue,
+        location.latitude,
+        location.longitude,
+        simulationTime.timeZone
+      ),
+    [dateValue, location.latitude, location.longitude, simulationTime.timeZone]
+  );
+  const daylightAppearance = useMemo(
+    () => getDaylightAppearance(sunPosition.elevationDeg),
+    [sunPosition.elevationDeg]
   );
 
   function applyCoordinates() {
@@ -121,6 +139,7 @@ export function App() {
         simulationDate={simulationDate}
         shadowsEnabled={shadowsEnabled}
         quality={quality}
+        daylightAppearance={daylightAppearance}
         onModeChange={setMapMode}
         onStatusChange={setViewerStatus}
       />
@@ -205,6 +224,10 @@ export function App() {
                 <dd>
                   {formatCoordinate(location.latitude)}, {formatCoordinate(location.longitude)}
                 </dd>
+              </div>
+              <div>
+                <dt>Time zone</dt>
+                <dd>{simulationTime.timeZone}</dd>
               </div>
             </dl>
           </section>
@@ -294,7 +317,7 @@ export function App() {
               </div>
               <div>
                 <dt>Light</dt>
-                <dd>{sunPosition.isDaylight ? "Daylight" : "Below horizon"}</dd>
+                <dd>{daylightAppearance.label}</dd>
               </div>
               <div>
                 <dt>Solar noon</dt>

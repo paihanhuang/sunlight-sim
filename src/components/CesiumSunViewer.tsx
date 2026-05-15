@@ -9,6 +9,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import type { DaylightAppearance } from "../lib/solar";
 import type { MapMode, PropertyLocation, ShadowQuality } from "../types";
 
 type CesiumSunViewerProps = {
@@ -16,6 +17,7 @@ type CesiumSunViewerProps = {
   simulationDate: Date;
   shadowsEnabled: boolean;
   quality: ShadowQuality;
+  daylightAppearance: DaylightAppearance;
   onModeChange: (mode: MapMode) => void;
   onStatusChange: (status: string) => void;
 };
@@ -215,6 +217,7 @@ export function CesiumSunViewer({
   simulationDate,
   shadowsEnabled,
   quality,
+  daylightAppearance,
   onModeChange,
   onStatusChange,
 }: CesiumSunViewerProps) {
@@ -459,13 +462,16 @@ export function CesiumSunViewer({
     }
 
     viewer.clock.currentTime = Cesium.JulianDate.fromDate(simulationDate);
+    viewer.scene.light = new Cesium.SunLight({
+      intensity: 0.12 + daylightAppearance.factor * 1.08,
+    });
     if (viewer.scene.shadowMap) {
       viewer.scene.shadowMap.enabled = shadowsEnabled;
     }
     viewer.shadows = shadowsEnabled;
     applyShadowQuality(viewer, quality);
     viewer.scene.requestRender();
-  }, [quality, shadowsEnabled, simulationDate]);
+  }, [daylightAppearance.factor, quality, shadowsEnabled, simulationDate]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -492,6 +498,14 @@ export function CesiumSunViewer({
   return (
     <div ref={shellRef} className="viewer-shell" data-testid="cesium-viewer">
       <div ref={containerRef} className="cesium-container" />
+      <div
+        className="daylight-overlay"
+        data-testid="daylight-overlay"
+        data-daylight-label={daylightAppearance.label}
+        data-daylight-opacity={daylightAppearance.overlayOpacity.toFixed(3)}
+        aria-hidden="true"
+        style={{ opacity: daylightAppearance.overlayOpacity }}
+      />
       <div
         className="map-compass"
         data-testid="map-compass"

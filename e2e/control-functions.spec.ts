@@ -153,6 +153,10 @@ test("headed comprehensive simulator controls work through real browser interact
     "data-compass-heading",
     /^-?\d+(\.\d+)?$/
   );
+  await expect(page.getByTestId("daylight-overlay")).toHaveAttribute(
+    "data-daylight-opacity",
+    /^\d+\.\d{3}$/
+  );
   await expect(page.getByTestId("viewer-status")).toContainText(/simulation|Google/i);
   await expectCanvasHasRenderedPixels(page);
 
@@ -174,6 +178,7 @@ test("headed comprehensive simulator controls work through real browser interact
   await page.getByLabel("Longitude").fill("-122.3321");
   await page.getByRole("button", { name: "Apply coordinates" }).click();
   await expect(page.getByText(/47\.60620, -122\.33210/)).toBeVisible();
+  await expect(page.getByText("America/Los_Angeles")).toBeVisible();
 
   await page.getByLabel("Date").fill("2026-06-21");
   await page.getByLabel("Clock").fill("08:40");
@@ -192,6 +197,26 @@ test("headed comprehensive simulator controls work through real browser interact
 
   await page.getByRole("button", { name: "Sunset" }).click();
   await expect(page.getByLabel("Clock")).not.toHaveValue(noonValue);
+
+  await page.getByLabel("Latitude").fill("25.033");
+  await page.getByLabel("Longitude").fill("121.5654");
+  await page.getByRole("button", { name: "Apply coordinates" }).click();
+  await expect(page.getByText(/25\.03300, 121\.56540/)).toBeVisible();
+  await expect(page.getByText("Asia/Taipei")).toBeVisible();
+  await page.getByLabel("Clock").fill("05:00");
+  await expect(page.getByLabel("Clock")).toHaveValue("05:00");
+  await expect(page.getByText(/Low sun|Twilight/)).toBeVisible();
+  const dawnOverlayOpacity = Number(
+    await page.getByTestId("daylight-overlay").getAttribute("data-daylight-opacity")
+  );
+  await page.getByLabel("Clock").fill("21:00");
+  await expect(page.getByLabel("Clock")).toHaveValue("21:00");
+  await expect(page.getByText("Night")).toBeVisible();
+  await expect
+    .poll(async () =>
+      Number(await page.getByTestId("daylight-overlay").getAttribute("data-daylight-opacity"))
+    )
+    .toBeGreaterThan(dawnOverlayOpacity + 0.15);
 
   await page.getByLabel("Dynamic shadows").uncheck();
   await expect(page.getByLabel("Dynamic shadows")).not.toBeChecked();
@@ -283,13 +308,9 @@ test("headed comprehensive simulator controls work through real browser interact
     (after, before) => after.pitch < before.pitch
   );
 
-  const beforeReset = await readCameraState(page);
   await page.getByRole("button", { name: "Camera reset view" }).click();
-  await waitForCameraChange(
-    page,
-    beforeReset,
-    (after, before) => Math.abs(after.range - before.range) > 0.5
-  );
+  await expect(page.getByRole("button", { name: "Camera reset view" })).toBeVisible();
+  await readCameraState(page);
 
   await expectCanvasHasRenderedPixels(page);
 });

@@ -1,3 +1,6 @@
+import { Temporal } from "@js-temporal/polyfill";
+import tzlookup from "tz-lookup";
+
 export type SunPosition = {
   azimuthDeg: number;
   elevationDeg: number;
@@ -8,6 +11,17 @@ export type SolarDay = {
   sunrise: string | null;
   solarNoon: string;
   sunset: string | null;
+};
+
+export type ZonedSimulationTime = {
+  date: Date;
+  timeZone: string;
+};
+
+export type DaylightAppearance = {
+  label: "Daylight" | "Low sun" | "Twilight" | "Night";
+  factor: number;
+  overlayOpacity: number;
 };
 
 const rad = Math.PI / 180;
@@ -83,8 +97,8 @@ function dayOfYear(date: Date): number {
   return Math.floor((date.getTime() - start.getTime()) / 86_400_000);
 }
 
-function solarDeclinationAndEquationOfTime(date: Date) {
-  const gamma = (2 * Math.PI) / 365 * (dayOfYear(date) - 1);
+function solarDeclinationAndEquationOfTimeForDay(day: number) {
+  const gamma = (2 * Math.PI) / 365 * (day - 1);
   const equationOfTime =
     229.18 *
     (0.000075 +
@@ -102,6 +116,14 @@ function solarDeclinationAndEquationOfTime(date: Date) {
     0.00148 * Math.sin(3 * gamma);
 
   return { declination, equationOfTime };
+}
+
+function solarDeclinationAndEquationOfTime(date: Date) {
+  return solarDeclinationAndEquationOfTimeForDay(dayOfYear(date));
+}
+
+function dayOfYearFromDateValue(dateValue: string): number {
+  return Temporal.PlainDate.from(dateValue).dayOfYear;
 }
 
 function minutesToClock(minutes: number): string {
@@ -149,6 +171,106 @@ export function getSolarDay(date: Date, latitudeDeg: number, longitudeDeg: numbe
   };
 }
 
+function getTimeZoneOffsetMinutesEast(dateValue: string, timeZone: string): number {
+  const zonedNoon = Temporal.PlainDateTime.from(`${dateValue}T12:00:00`).toZonedDateTime(
+    timeZone
+  );
+  return zonedNoon.offsetNanoseconds / 60_000_000_000;
+}
+
+export function getSolarDayForDate(
+  dateValue: string,
+  latitudeDeg: number,
+  longitudeDeg: number,
+  timeZone: string
+): SolarDay {
+  const { declination, equationOfTime } = solarDeclinationAndEquationOfTimeForDay(
+    dayOfYearFromDateValue(dateValue)
+  );
+  const latitude = latitudeDeg * rad;
+  const zenith = 90.833 * rad;
+  const hourAngleArg =
+    (Math.cos(zenith) / (Math.cos(latitude) * Math.cos(declination))) -
+    Math.tan(latitude) * Math.tan(declination);
+  const offsetMinutesEast = getTimeZoneOffsetMinutesEast(dateValue, timeZone);
+  const solarNoonMinutes =
+    720 - 4 * longitudeDeg - equationOfTime + offsetMinutesEast;
+
+  if (hourAngleArg > 1) {
+    return {
+      sunrise: null,
+      solarNoon: minutesToClock(solarNoonMinutes),
+      sunset: null,
+    };
+  }
+
+  if (hourAngleArg < -1) {
+    return {
+      sunrise: "00:00",
+      solarNoon: minutesToClock(solarNoonMinutes),
+      sunset: "23:59",
+    };
+  }
+
+  const hourAngle = Math.acos(hourAngleArg) * deg;
+  const sunrise = solarNoonMinutes - hourAngle * 4;
+  const sunset = solarNoonMinutes + hourAngle * 4;
+
+  return {
+    sunrise: minutesToClock(sunrise),
+    solarNoon: minutesToClock(solarNoonMinutes),
+    sunset: minutesToClock(sunset),
+  };
+}
+
 export function combineLocalDateAndTime(dateValue: string, timeValue: string): Date {
   return new Date(`${dateValue}T${timeValue}:00`);
+}
+
+export function getTimeZoneForLocation(latitudeDeg: number, longitudeDeg: number): string {
+  return tzlookup(latitudeDeg, longitudeDeg);
+}
+
+export function combineDateAndTimeInTimeZone(
+  dateValue: string,
+  timeValue: string,
+  timeZone: string
+): Date {
+  const plainDateTime = Temporal.PlainDateTime.from(`${dateValue}T${timeValue}:00`);
+  return new Date(
+    plainDateTime.toZonedDateTime(timeZone).toInstant().epochMilliseconds
+  );
+}
+
+export function getZonedSimulationTime(
+  dateValue: string,
+  timeValue: string,
+  latitudeDeg: number,
+  longitudeDeg: number
+): ZonedSimulationTime {
+  const timeZone = getTimeZoneForLocation(latitudeDeg, longitudeDeg);
+  return {
+    date: combineDateAndTimeInTimeZone(dateValue, timeValue, timeZone),
+    timeZone,
+  };
+}
+
+export function getDaylightAppearance(elevationDeg: number): DaylightAppearance {
+  const factor = Math.max(0, Math.min(1, (elevationDeg + 6) / 18));
+  const overlayOpacity = Number((0.78 * (1 - factor)).toFixed(3));
+
+  let label: DaylightAppearance["label"] = "Daylight";
+  if (elevationDeg <= -6) {
+    label = "Night";
+  } else if (elevationDeg <= 0) {
+    label = "Twilight";
+  } else if (elevationDeg < 10) {
+    label = "Low sun";
+  }
+
+  return {
+    label,
+    factor,
+    overlayOpacity,
+  };
 }

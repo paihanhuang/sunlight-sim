@@ -78,6 +78,18 @@ button:disabled {
   background: #2b3835;
 }
 
+.daylight-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(34, 46, 78, 0.18), rgba(3, 8, 19, 0.92)),
+    rgba(2, 7, 18, 0.82);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  transition: opacity 180ms ease-out;
+}
+
 .map-compass {
   position: absolute;
   right: 18px;
