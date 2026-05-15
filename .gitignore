@@ -9,6 +9,21 @@
 !.codex/agent-memory/*/.gitkeep
 .codex/worktrees/
 
+# Dependencies and build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local environment secrets
+.env
+.env.*
+!.env.example
+
+# Test artifacts
+playwright-report/
+test-results/
+coverage/
+
 # OS
 .DS_Store
 Thumbs.db

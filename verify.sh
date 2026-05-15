@@ -1,8 +1,22 @@
 #!/usr/bin/env bash
-# Project verification script. Customize for your project.
-# Should complete quickly enough for routine agent use.
-# Exit 0 = pass. Non-zero = verification failed.
 
 set -euo pipefail
 
-echo "No verification configured. Edit verify.sh to add linting, type-checking, or tests."
+TIMEOUT_CMD=$(command -v timeout 2>/dev/null || command -v gtimeout 2>/dev/null || echo "")
+VERIFY_TIMEOUT="${VERIFY_TIMEOUT:-180}"
+
+run_step() {
+  local name="$1"
+  shift
+  echo "==> ${name}"
+  if [[ -n "$TIMEOUT_CMD" ]]; then
+    "$TIMEOUT_CMD" "$VERIFY_TIMEOUT" "$@"
+  else
+    "$@"
+  fi
+}
+
+run_step "Typecheck" npm run typecheck
+run_step "Lint" npm run lint
+run_step "Unit tests" npm run test
+run_step "Headed Playwright e2e" npm run test:e2e:headed
